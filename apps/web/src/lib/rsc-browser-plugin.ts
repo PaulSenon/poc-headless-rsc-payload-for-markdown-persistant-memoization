@@ -46,13 +46,6 @@ export default function vitePluginRscBrowser(): Plugin[] {
           delete plugin!.transform
         }
       },
-      buildApp: {
-        order: 'pre',
-        async handler() {
-          // clean up nested outDir
-          rmSync('./dist', { recursive: true, force: true })
-        },
-      },
       configureServer(server) {
         createRPCServer('rsc:transport-proxy', server.ws, {
           invoke: (payload: any) =>

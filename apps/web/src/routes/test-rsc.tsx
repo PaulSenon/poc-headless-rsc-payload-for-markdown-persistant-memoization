@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, Component, type ReactNode } from "react";
 import { use } from "react";
-import { parseRscPayload, fetchRawRscPayload, type RscPayload } from "@/lib/rsc-client";
+import { 
+  parseRscPayload, 
+  fetchRawRscPayload, 
+  parseRscMixedPayload,
+  fetchRawRscMixedPayload,
+  type RscPayload 
+} from "@/lib/rsc-client";
 
 export const Route = createFileRoute("/test-rsc")({
   component: TestRscComponent,
@@ -12,6 +18,15 @@ function TestRscComponent() {
   const [error, setError] = useState<string | null>(null);
   const [rscPromise, setRscPromise] = useState<Promise<RscPayload> | null>(null);
   const [rawPayloadInfo, setRawPayloadInfo] = useState<{
+    contentType: string;
+    bodyLength: number;
+  } | null>(null);
+  
+  // Mixed component state
+  const [loadingMixed, setLoadingMixed] = useState(false);
+  const [errorMixed, setErrorMixed] = useState<string | null>(null);
+  const [rscMixedPromise, setRscMixedPromise] = useState<Promise<RscPayload> | null>(null);
+  const [rawMixedPayloadInfo, setRawMixedPayloadInfo] = useState<{
     contentType: string;
     bodyLength: number;
   } | null>(null);
@@ -53,6 +68,45 @@ function TestRscComponent() {
       console.error("RSC error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const testMixedRscServer = async () => {
+    setLoadingMixed(true);
+    setErrorMixed(null);
+    setRscMixedPromise(null);
+    setRawMixedPayloadInfo(null);
+
+    try {
+      const markdown = "# Test Markdown\n\nThis is a **test** markdown with an interactive H1 component!";
+      
+      // Step 1: Fetch raw payload
+      console.log("Step 1: Fetching raw mixed RSC payload...");
+      const rawResponse = await fetchRawRscMixedPayload(markdown);
+      const contentType = rawResponse.headers.get('content-type') || 'unknown';
+      const clonedForInspection = rawResponse.clone();
+      const bodyText = await clonedForInspection.text();
+      
+      setRawMixedPayloadInfo({
+        contentType,
+        bodyLength: bodyText.length,
+      });
+      
+      console.log("Step 1 complete: Raw mixed payload info", { contentType, bodyLength: bodyText.length });
+      
+      // Step 2: Parse RSC payload
+      console.log("Step 2: Parsing mixed RSC payload...");
+      const promise = parseRscMixedPayload(markdown);
+      setRscMixedPromise(promise);
+      
+      await promise;
+      console.log("Step 2 complete: Mixed RSC payload parsed successfully");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      setErrorMixed(errorMessage);
+      console.error("Mixed RSC error:", err);
+    } finally {
+      setLoadingMixed(false);
     }
   };
 
@@ -103,6 +157,56 @@ function TestRscComponent() {
             </RscErrorBoundary>
           </section>
         )}
+      </div>
+
+      {/* Mixed Component Test Section */}
+      <div className="mt-8 pt-8 border-t">
+        <h1 className="text-2xl font-bold mb-6">Mixed RSC Component Test (Server + Client)</h1>
+        <div className="space-y-4">
+          <section className="rounded-lg border p-4">
+            <h2 className="mb-2 font-medium">Test Mixed RSC Component</h2>
+            <button
+              onClick={testMixedRscServer}
+              disabled={loadingMixed}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+            >
+              {loadingMixed ? "Testing..." : "Fetch & Parse Mixed RSC Payload"}
+            </button>
+            <p className="text-sm text-gray-600 mt-2">
+              This tests MarkdownRenderer (server component) that contains InteractiveH1 (client component)
+            </p>
+          </section>
+
+          {errorMixed && (
+            <section className="rounded-lg border p-4 border-red-500">
+              <h2 className="mb-2 font-medium text-red-500">Error</h2>
+              <pre className="text-sm text-red-600 whitespace-pre-wrap">{errorMixed}</pre>
+            </section>
+          )}
+
+          {rawMixedPayloadInfo && (
+            <section className="rounded-lg border p-4">
+              <h2 className="mb-2 font-medium">Raw Mixed Payload Info</h2>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <strong>Content-Type:</strong> {rawMixedPayloadInfo.contentType}
+                </div>
+                <div>
+                  <strong>Body Length:</strong> {rawMixedPayloadInfo.bodyLength} bytes
+                </div>
+              </div>
+            </section>
+          )}
+
+          {rscMixedPromise && (
+            <section className="rounded-lg border p-4">
+              <h2 className="mb-2 font-medium">Parsed Mixed RSC Payload</h2>
+              <RscErrorBoundary>
+                <RscPayloadRenderer promise={rscMixedPromise} />
+              </RscErrorBoundary>
+            </section>
+          )}
+        </div>
       </div>
     </div>
   );

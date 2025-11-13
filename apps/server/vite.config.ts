@@ -13,6 +13,7 @@ export default defineConfig({
         rollupOptions: {
           input: {
             index: './src/entry.rsc.tsx',
+            mixed: './src/entry-mixed.rsc.tsx',
           },
         },
         outDir: './dist/rsc',

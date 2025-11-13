@@ -10,6 +10,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { rscHandler } from "./rsc-handler";
+import { rscMixedHandler } from "./rsc-mixed-handler";
 
 const app = new Hono();
 
@@ -77,7 +78,7 @@ app.use("/*", async (c, next) => {
 
 app.get("/", (c) => c.text("OK"));
 
-// RSC render endpoint
+// RSC render endpoint - server-only component
 app.post("/render", async (c) => {
   try {
     const response = await rscHandler(c.req.raw);
@@ -85,6 +86,17 @@ app.post("/render", async (c) => {
   } catch (error) {
     console.error("RSC render error:", error);
     return c.json({ error: "RSC render failed" }, 500);
+  }
+});
+
+// RSC render endpoint - mixed component (server + client)
+app.post("/render-mixed", async (c) => {
+  try {
+    const response = await rscMixedHandler(c.req.raw);
+    return response;
+  } catch (error) {
+    console.error("RSC mixed render error:", error);
+    return c.json({ error: "RSC mixed render failed" }, 500);
   }
 });
 
