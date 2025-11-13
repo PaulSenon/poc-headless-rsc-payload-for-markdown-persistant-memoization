@@ -1,6 +1,8 @@
 # RSC Payload PoC - Technical Documentation
 
-A proof-of-concept demonstrating **headless React Server Components (RSC)** rendering using `@vitejs/plugin-rsc` in a monorepo setup. This project shows how to decouple RSC server rendering from client consumption, enabling static RSC payload generation and client-side hydration.
+Nasty vibe codded PoC to prove I can hack in RSC (React Server Component) to "memoize" llm markdown rendered messages in a react app, so I can persist those RSC to some persistant cache (local/db) to not have to fully reparse/rerender from scratch every messages of chat history everytime. This is better than SSRing (render react to html string) because this would allow keeping some client-side reactivity when needed while still skipping markdown to react parsing, and also skiping most of react rendering (so everything is smoother.)
+
+Ths is a hack because RSC are meant to be used on server to partially prerender some part of a react component, but here I use it a serializable format to cache partially prerendered react component.
 
 Purpose: try to find a way to cache rendering of some components (e.g. llm generated chat to not reparse/rerender markdown messages every time) To use it as a persistant memoization.
 Because RSC allow caching the static output, and still have some hydratable island inside. Perfect for markdown content in chats that contains mainly static things but might require some little client-side interractivity sometime (e.g. copy to clipboard, toggle line breaks, etc.)
