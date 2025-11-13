@@ -20,6 +20,9 @@ export default async function handler(request: Request): Promise<Response> {
   };
   
   // Render to RSC stream
+  // Note: Server file paths in stack traces are just metadata for debugging
+  // The client uses @vitejs/plugin-rsc/browser to resolve component references
+  // Component IDs (like "5d8f14cf3c81") are resolved via the module map, not file paths
   const rscStream = renderToReadableStream<RscPayload>(rscPayload);
   
   return new Response(rscStream, {
