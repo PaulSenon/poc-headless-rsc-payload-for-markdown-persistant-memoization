@@ -23,3 +23,8 @@ Current structure:
 > ![DISCLAIMER] 
 > This is AI slope generated proof of concept because I needed to see of possible and was too hard to find similar experimentations online. So I vibe coded the shit out of it, it's crappy, it's unreadable, it's broken, it's horrible, but it porved it can work. I now have to redo everything and eventually spend time learning the concepts behind now. (because wasn't super confident with how RSC works under the hood)
 
+Still if you want to run it:
+- pnpm install
+- pnpm dev
+
+(but don't do it)
