@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { fetchRawRscPayload, parseRscPayload, type RscPayloadParseResult } from "@/lib/rsc-client";
+import { useState, Component, type ReactNode } from "react";
+import { use } from "react";
+import { parseRscPayload, fetchRawRscPayload, type RscPayload } from "@/lib/rsc-client";
 
 export const Route = createFileRoute("/test-rsc")({
   component: TestRscComponent,
@@ -9,28 +10,47 @@ export const Route = createFileRoute("/test-rsc")({
 function TestRscComponent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [payloadInfo, setPayloadInfo] = useState<RscPayloadParseResult | null>(null);
+  const [rscPromise, setRscPromise] = useState<Promise<RscPayload> | null>(null);
+  const [rawPayloadInfo, setRawPayloadInfo] = useState<{
+    contentType: string;
+    bodyLength: number;
+  } | null>(null);
 
   const testRscServer = async () => {
     setLoading(true);
     setError(null);
-    setPayloadInfo(null);
+    setRscPromise(null);
+    setRawPayloadInfo(null);
 
     try {
-      // Step 1: Fetch raw payload
+      const markdown = "# Test RSC\n\nThis is a **test** markdown.";
+      
+      // Step 1: Fetch raw payload for inspection
       console.log("Step 1: Fetching raw RSC payload...");
-      const response = await fetchRawRscPayload("# Test RSC\n\nThis is a **test** markdown.");
+      const rawResponse = await fetchRawRscPayload(markdown);
+      const contentType = rawResponse.headers.get('content-type') || 'unknown';
+      const clonedForInspection = rawResponse.clone();
+      const bodyText = await clonedForInspection.text();
       
-      // Step 2: Parse and log the payload
-      console.log("Step 2: Parsing and logging payload...");
-      const info = await parseRscPayload(response);
-      setPayloadInfo(info);
+      setRawPayloadInfo({
+        contentType,
+        bodyLength: bodyText.length,
+      });
       
-      console.log("Step 2 complete: Payload info logged to console");
+      console.log("Step 1 complete: Raw payload info", { contentType, bodyLength: bodyText.length });
+      
+      // Step 2: Parse RSC payload using @vitejs/plugin-rsc/browser
+      console.log("Step 2: Parsing RSC payload with createFromFetch...");
+      const promise = parseRscPayload(markdown);
+      setRscPromise(promise);
+      
+      // Wait for it to resolve to check for errors
+      await promise;
+      console.log("Step 2 complete: RSC payload parsed successfully");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       setError(errorMessage);
-      console.error("RSC fetch error:", err);
+      console.error("RSC error:", err);
     } finally {
       setLoading(false);
     }
@@ -61,73 +81,79 @@ function TestRscComponent() {
           </section>
         )}
 
-        {payloadInfo && (
+        {rawPayloadInfo && (
           <section className="rounded-lg border p-4">
-            <h2 className="mb-2 font-medium">Step 2: Parsed RSC Payload</h2>
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <strong>Content-Type:</strong> {payloadInfo.contentType}
-                </div>
-                <div>
-                  <strong>Total Lines:</strong> {payloadInfo.lines.length}
-                </div>
-                <div>
-                  <strong>Body Length:</strong> {payloadInfo.bodyText.length} bytes
-                </div>
-                <div>
-                  <strong>ArrayBuffer:</strong> {payloadInfo.bodyArrayBuffer.byteLength} bytes
-                </div>
+            <h2 className="mb-2 font-medium">Step 1: Raw Payload Info</h2>
+            <div className="space-y-2 text-sm">
+              <div>
+                <strong>Content-Type:</strong> {rawPayloadInfo.contentType}
               </div>
-              
-              <div className="mt-4">
-                <strong className="block mb-2">Component References ({payloadInfo.componentReferences.length}):</strong>
-                {payloadInfo.componentReferences.length > 0 ? (
-                  <ul className="list-disc list-inside space-y-1 text-xs">
-                    {payloadInfo.componentReferences.map((ref, i) => (
-                      <li key={i} className="font-mono">
-                        <span className="text-blue-600">{ref.componentName}</span>
-                        {' '}(ID: <span className="text-purple-600">{ref.id}</span>)
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500 text-xs">No component references found</p>
-                )}
+              <div>
+                <strong>Body Length:</strong> {rawPayloadInfo.bodyLength} bytes
               </div>
-              
-              <div className="mt-4">
-                <strong className="block mb-2">Component Definitions ({payloadInfo.componentDefinitions.length}):</strong>
-                {payloadInfo.componentDefinitions.length > 0 ? (
-                  <ul className="list-disc list-inside space-y-1 text-xs">
-                    {payloadInfo.componentDefinitions.map((def, i) => (
-                      <li key={i}>
-                        <span className="font-mono text-green-600">{def.name}</span>
-                        {' '}(<span className="text-orange-600">{def.env}</span>)
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500 text-xs">No component definitions found</p>
-                )}
-              </div>
-              
-              <div className="mt-4">
-                <strong className="block mb-2">Root Payload:</strong>
-                <pre className="mt-1 p-2 rounded bg-gray-50 text-xs overflow-auto max-h-32">
-                  {JSON.stringify(payloadInfo.rootPayload, null, 2)}
-                </pre>
-              </div>
-              
-              <details className="mt-4">
-                <summary className="cursor-pointer font-medium">Raw Payload Preview (first 1000 chars)</summary>
-                <pre className="mt-2 p-2 rounded bg-gray-50 text-xs overflow-auto max-h-40 font-mono">
-                  {payloadInfo.bodyText.substring(0, 1000)}
-                </pre>
-              </details>
             </div>
           </section>
         )}
+
+        {rscPromise && (
+          <section className="rounded-lg border p-4">
+            <h2 className="mb-2 font-medium">Step 2: Parsed RSC Payload</h2>
+            <RscErrorBoundary>
+              <RscPayloadRenderer promise={rscPromise} />
+            </RscErrorBoundary>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Error boundary for RSC payload rendering
+class RscErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="text-sm text-red-600">
+          Error rendering RSC payload: {this.state.error.message}
+          {this.state.error.stack && (
+            <pre className="mt-2 text-xs whitespace-pre-wrap">
+              {this.state.error.stack}
+            </pre>
+          )}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Component to render the parsed RSC payload using React's use() hook
+// Note: use() cannot be called inside try/catch - errors must be handled by error boundary
+function RscPayloadRenderer({ promise }: { promise: Promise<RscPayload> }) {
+  // React 19's use() hook unwraps the promise
+  // Errors will be thrown to the nearest error boundary
+  const payload = use(promise);
+  
+  return (
+    <div className="space-y-2">
+      <p className="text-sm text-green-600">✅ RSC payload parsed successfully!</p>
+      <div className="border rounded p-4">
+        <h3 className="text-sm font-medium mb-2">Rendered Content:</h3>
+        <div className="prose prose-sm max-w-none">
+          {payload.content}
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,9 @@ import ReactDOM from "react-dom/client";
 import Loader from "./components/loader";
 import { routeTree } from "./routeTree.gen";
 import { orpc, queryClient } from "./utils/orpc";
+// Import shared components so RSC plugin can scan them and generate client-references
+// This ensures component IDs match between server and client
+import "@poc-rsc-payload/components";
 
 const router = createRouter({
   routeTree,

@@ -1,5 +1,5 @@
 import { renderToReadableStream } from '@vitejs/plugin-rsc/rsc';
-import { MarkdownRenderer } from '@poc-rsc-payload/components/server';
+import { SimpleServerComponent } from '@poc-rsc-payload/components';
 
 export type RscPayload = {
   content: React.ReactNode;
@@ -14,15 +14,13 @@ export default async function handler(request: Request): Promise<Response> {
     return new Response('Missing or invalid markdown', { status: 400 });
   }
   
-  // Create RSC payload
+  // Create RSC payload with server-only component (no client components)
+  // This tests if basic RSC payload parsing works without module resolution
   const rscPayload: RscPayload = {
-    content: <MarkdownRenderer markdown={markdown} />,
+    content: <SimpleServerComponent markdown={markdown} />,
   };
   
   // Render to RSC stream
-  // Note: Server file paths in stack traces are just metadata for debugging
-  // The client uses @vitejs/plugin-rsc/browser to resolve component references
-  // Component IDs (like "5d8f14cf3c81") are resolved via the module map, not file paths
   const rscStream = renderToReadableStream<RscPayload>(rscPayload);
   
   return new Response(rscStream, {
