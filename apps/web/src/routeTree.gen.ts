@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TestSharedRouteImport } from './routes/test-shared'
 import { Route as TestRscRouteImport } from './routes/test-rsc'
 import { Route as RscDemoRouteImport } from './routes/rsc-demo'
+import { Route as RscComparisonRouteImport } from './routes/rsc-comparison'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TestSharedRoute = TestSharedRouteImport.update({
@@ -29,6 +30,11 @@ const RscDemoRoute = RscDemoRouteImport.update({
   path: '/rsc-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RscComparisonRoute = RscComparisonRouteImport.update({
+  id: '/rsc-comparison',
+  path: '/rsc-comparison',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,12 +43,14 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/rsc-comparison': typeof RscComparisonRoute
   '/rsc-demo': typeof RscDemoRoute
   '/test-rsc': typeof TestRscRoute
   '/test-shared': typeof TestSharedRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/rsc-comparison': typeof RscComparisonRoute
   '/rsc-demo': typeof RscDemoRoute
   '/test-rsc': typeof TestRscRoute
   '/test-shared': typeof TestSharedRoute
@@ -50,20 +58,33 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/rsc-comparison': typeof RscComparisonRoute
   '/rsc-demo': typeof RscDemoRoute
   '/test-rsc': typeof TestRscRoute
   '/test-shared': typeof TestSharedRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/rsc-demo' | '/test-rsc' | '/test-shared'
+  fullPaths:
+    | '/'
+    | '/rsc-comparison'
+    | '/rsc-demo'
+    | '/test-rsc'
+    | '/test-shared'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/rsc-demo' | '/test-rsc' | '/test-shared'
-  id: '__root__' | '/' | '/rsc-demo' | '/test-rsc' | '/test-shared'
+  to: '/' | '/rsc-comparison' | '/rsc-demo' | '/test-rsc' | '/test-shared'
+  id:
+    | '__root__'
+    | '/'
+    | '/rsc-comparison'
+    | '/rsc-demo'
+    | '/test-rsc'
+    | '/test-shared'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RscComparisonRoute: typeof RscComparisonRoute
   RscDemoRoute: typeof RscDemoRoute
   TestRscRoute: typeof TestRscRoute
   TestSharedRoute: typeof TestSharedRoute
@@ -92,6 +113,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RscDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rsc-comparison': {
+      id: '/rsc-comparison'
+      path: '/rsc-comparison'
+      fullPath: '/rsc-comparison'
+      preLoaderRoute: typeof RscComparisonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +132,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RscComparisonRoute: RscComparisonRoute,
   RscDemoRoute: RscDemoRoute,
   TestRscRoute: TestRscRoute,
   TestSharedRoute: TestSharedRoute,
