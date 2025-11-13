@@ -9,6 +9,7 @@ import { appRouter } from "@poc-rsc-payload/api/routers/index";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { rscHandler } from "./rsc-handler";
 
 const app = new Hono();
 
@@ -76,7 +77,21 @@ app.use("/*", async (c, next) => {
 
 app.get("/", (c) => c.text("OK"));
 
+// RSC render endpoint
+app.post("/render", async (c) => {
+  try {
+    const response = await rscHandler(c.req.raw);
+    return response;
+  } catch (error) {
+    console.error("RSC render error:", error);
+    return c.json({ error: "RSC render failed" }, 500);
+  }
+});
+
 import { serve } from "@hono/node-server";
+
+// Set react-server condition for RSC
+process.env.NODE_OPTIONS = (process.env.NODE_OPTIONS || '') + ' --conditions=react-server';
 
 serve(
   {

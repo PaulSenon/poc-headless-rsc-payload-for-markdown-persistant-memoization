@@ -3,12 +3,12 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "strictNullChecks": true
-  }
+    }
+  },
+  "include": ["src/**/*"]
 }
+

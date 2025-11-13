@@ -9,8 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TestSharedRouteImport } from './routes/test-shared'
+import { Route as TestRscRouteImport } from './routes/test-rsc'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TestSharedRoute = TestSharedRouteImport.update({
+  id: '/test-shared',
+  path: '/test-shared',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestRscRoute = TestRscRouteImport.update({
+  id: '/test-rsc',
+  path: '/test-rsc',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +31,50 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/test-rsc': typeof TestRscRoute
+  '/test-shared': typeof TestSharedRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/test-rsc': typeof TestRscRoute
+  '/test-shared': typeof TestSharedRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/test-rsc': typeof TestRscRoute
+  '/test-shared': typeof TestSharedRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/test-rsc' | '/test-shared'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/test-rsc' | '/test-shared'
+  id: '__root__' | '/' | '/test-rsc' | '/test-shared'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TestRscRoute: typeof TestRscRoute
+  TestSharedRoute: typeof TestSharedRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/test-shared': {
+      id: '/test-shared'
+      path: '/test-shared'
+      fullPath: '/test-shared'
+      preLoaderRoute: typeof TestSharedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/test-rsc': {
+      id: '/test-rsc'
+      path: '/test-rsc'
+      fullPath: '/test-rsc'
+      preLoaderRoute: typeof TestRscRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +87,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TestRscRoute: TestRscRoute,
+  TestSharedRoute: TestSharedRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
